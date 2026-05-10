@@ -55,6 +55,7 @@ def generate_index():
             universal.append(asset)
 
     site = Path("site")
+    site.mkdir(parents=True, exist_ok=True)
     (site / ".nojekyll").touch()
 
     all_backends = set(by_backend.keys())
