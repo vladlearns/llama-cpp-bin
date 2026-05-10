@@ -7,10 +7,8 @@ import urllib.request
 from pathlib import Path
 
 REPO = os.environ["REPO"]
-TAG = os.environ["TAG"]
 TOKEN = os.environ["GITHUB_TOKEN"]
 
-API_URL = f"https://api.github.com/repos/{REPO}/releases/tags/{TAG}"
 HEADERS = {
     "Authorization": f"Bearer {TOKEN}",
     "Accept": "application/vnd.github+json",
@@ -18,8 +16,9 @@ HEADERS = {
 }
 
 
-def fetch_release():
-    req = urllib.request.Request(API_URL, headers=HEADERS)
+def fetch_all_releases():
+    url = f"https://api.github.com/repos/{REPO}/releases?per_page=100"
+    req = urllib.request.Request(url, headers=HEADERS)
     with urllib.request.urlopen(req) as resp:
         return json.loads(resp.read())
 
@@ -37,24 +36,24 @@ def backend_from_filename(name):
 
 
 def generate_index():
-    release = fetch_release()
-    assets = [
-        a
-        for a in release.get("assets", [])
-        if a["name"].endswith(".whl") or a["name"].endswith(".tar.gz")
-    ]
+    releases = fetch_all_releases()
 
     by_backend = {}
     universal = []
-    for asset in assets:
-        name = asset["name"]
-        be = backend_from_filename(name)
-        if be:
-            by_backend.setdefault(be, []).append(asset)
-        else:
-            universal.append(asset)
+
+    for release in releases:
+        for asset in release.get("assets", []):
+            name = asset["name"]
+            if not (name.endswith(".whl") or name.endswith(".tar.gz")):
+                continue
+            be = backend_from_filename(name)
+            if be:
+                by_backend.setdefault(be, []).append(asset)
+            else:
+                universal.append(asset)
 
     site = Path("site")
+    site.mkdir(parents=True, exist_ok=True)
     (site / ".nojekyll").touch()
 
     all_backends = set(by_backend.keys())
@@ -72,7 +71,7 @@ def generate_index():
             "</html>"
         )
         (be_dir / "index.html").write_text(html, encoding="utf-8")
-        print(f"Generated {be} with {len(be_assets)} assets")
+        print(f"Generated whl/{be} with {len(be_assets)} assets")
 
 
 if __name__ == "__main__":
