@@ -22,3 +22,4 @@ llama.cpp/build-*/
 htmlcov/
 .idea/
 .vscode/
+dist_test/

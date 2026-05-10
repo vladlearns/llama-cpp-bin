@@ -14,6 +14,11 @@ pip install --index-url https://vladlearns.github.io/llama-cpp-bin/whl/rocm llam
 pip install --index-url https://vladlearns.github.io/llama-cpp-bin/whl/vulkan llama-cpp-bin
 ```
 
+Pin to a specific version:
+```bash
+pip install --index-url https://vladlearns.github.io/llama-cpp-bin/whl/cu124 llama-cpp-bin==9095.0.0
+```
+
 ### PyPI (builds from source)
 
 If no pre-built wheel matches your platform, pip falls back to building from the sdist on PyPI:
