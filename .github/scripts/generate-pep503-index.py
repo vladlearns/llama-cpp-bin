@@ -56,7 +56,22 @@ def generate_index():
     site.mkdir(parents=True, exist_ok=True)
     (site / ".nojekyll").touch()
 
-    all_backends = set(by_backend.keys())
+    all_backends = sorted(set(by_backend.keys()))
+
+    root_links = [f'<a href="whl/{be}/llama-cpp-bin/">{be}</a>' for be in all_backends]
+    root_html = (
+        "<!DOCTYPE html>\n"
+        "<html>\n"
+        "<body>\n"
+        "<h1>llama-cpp-bin</h1>\n"
+        "<p>Pre-built llama.cpp server binaries</p>\n"
+        + "\n".join(root_links)
+        + "\n</body>\n"
+        "</html>"
+    )
+    (site / "index.html").write_text(root_html, encoding="utf-8")
+    print(f"Generated root index with {len(all_backends)} backends")
+
     for be in all_backends:
         be_dir = site / "whl" / be / "llama-cpp-bin"
         be_dir.mkdir(parents=True, exist_ok=True)
