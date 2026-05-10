@@ -1,0 +1,24 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+
+# Generated during build
+src/llama_cpp_bin/bin/*
+!src/llama_cpp_bin/bin/.gitkeep
+src/llama_cpp_bin/build_info.json
+src/llama_cpp_bin/_version.py
+
+# llama.cpp build artifacts
+llama.cpp/build/
+llama.cpp/build-*/
+
+.pytest_cache/
+.coverage
+htmlcov/
+.idea/
+.vscode/

@@ -1,0 +1,121 @@
+name: Build macOS Wheels
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Git ref to build (tag recommended for releases, e.g. v0.1.0)'
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      version:
+        description: 'Git ref to build'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build_wheels_arm64:
+    name: macOS ARM64 (Metal)
+    runs-on: macos-14
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          repository: 'vladlearns/llama-cpp-bin'
+          ref: ${{ inputs.version }}
+          submodules: 'recursive'
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install build cmake
+
+      - name: Build Wheel
+        run: |
+          export CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=off -DGGML_BACKEND_DL=on -DGGML_METAL=on -DGGML_METAL_USE_BF16=on -DGGML_METAL_EMBED_LIBRARY=on -DGGML_RPC=on -DLLAMA_BUILD_BORINGSSL=ON -DLLAMA_BUILD_TESTS=off -DLLAMA_BUILD_EXAMPLES=off"
+          export MACOSX_DEPLOYMENT_TARGET="13.3"
+          export CMAKE_OSX_ARCHITECTURES="arm64"
+          export ARCHFLAGS="-arch arm64"
+
+          VERBOSE=1 python -m build --wheel
+
+          for file in ./dist/*universal2.whl; do
+            mv "$file" "${file/universal2/arm64}"
+          done
+
+      - name: Upload files to a GitHub release
+        id: upload-release
+        uses: svenstaro/upload-release-action@2.7.0
+        continue-on-error: true
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./dist/*.whl
+          tag: ${{ inputs.version }}
+          release_name: ${{ inputs.version }}
+          file_glob: true
+          make_latest: false
+          overwrite: true
+
+      - uses: actions/upload-artifact@v6
+        if: steps.upload-release.outcome == 'failure'
+        with:
+          name: macos-arm64
+          path: ./dist/*.whl
+
+  build_wheels_x64:
+    name: macOS x64
+    runs-on: macos-15-intel
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          repository: 'vladlearns/llama-cpp-bin'
+          ref: ${{ inputs.version }}
+          submodules: 'recursive'
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install build cmake
+
+      - name: Build Wheel
+        run: |
+          export CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=off -DGGML_BACKEND_DL=on -DGGML_CPU_ALL_VARIANTS=on -DGGML_METAL=off -DGGML_RPC=on -DLLAMA_BUILD_BORINGSSL=ON -DLLAMA_BUILD_TESTS=off -DLLAMA_BUILD_EXAMPLES=off"
+          export MACOSX_DEPLOYMENT_TARGET="13.3"
+          export CMAKE_OSX_ARCHITECTURES="x86_64"
+          export ARCHFLAGS="-arch x86_64"
+
+          VERBOSE=1 python -m build --wheel
+
+          for file in ./dist/*universal2.whl; do
+            mv "$file" "${file/universal2/x86_64}"
+          done
+
+      - name: Upload files to a GitHub release
+        id: upload-release
+        uses: svenstaro/upload-release-action@2.7.0
+        continue-on-error: true
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./dist/*.whl
+          tag: ${{ inputs.version }}
+          release_name: ${{ inputs.version }}
+          file_glob: true
+          make_latest: false
+          overwrite: true
+
+      - uses: actions/upload-artifact@v6
+        if: steps.upload-release.outcome == 'failure'
+        with:
+          name: macos-x64
+          path: ./dist/*.whl

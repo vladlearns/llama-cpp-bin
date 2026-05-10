@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=77", "setuptools-scm>=8", "wheel", "cmake"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "llama-cpp-bin"
+dynamic = ["version"]
+description = "llama.cpp server binary built from source"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "AGPL-3.0-or-later" }
+authors = [
+    { name = "Vladyslav Tkachenko", email = "vladlearns@gmail.com" }
+]
+
+[project.urls]
+Homepage = "https://github.com/vladlearns/llama-cpp-bin"
+Source   = "https://github.com/vladlearns/llama-cpp-bin"
+
+[project.scripts]
+llama-cpp-server = "llama_cpp_bin.cli:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-subprocess",
+]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+llama_cpp_bin = ["build_info.json", "bin/*"]
+
+[tool.setuptools_scm]
+version_file = "src/llama_cpp_bin/_version.py"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

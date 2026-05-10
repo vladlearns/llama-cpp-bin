@@ -1,0 +1,16 @@
+include README.md CHANGELOG.md LICENSE
+recursive-include llama.cpp *.cpp *.h *.hpp *.c *.txt *.cmake *.in *.metal
+recursive-include llama.cpp CMakeModules
+recursive-include llama.cpp common
+recursive-include llama.cpp examples
+recursive-include llama.cpp ggml
+recursive-include llama.cpp include
+recursive-include llama.cpp scripts
+recursive-include llama.cpp src
+recursive-include llama.cpp tests
+global-exclude __pycache__
+global-exclude *.py[cod]
+global-exclude *.egg-info
+global-exclude llama.cpp/build
+global-exclude llama.cpp/build-*
+global-exclude llama.cpp/.git
