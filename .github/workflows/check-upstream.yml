@@ -52,4 +52,4 @@ jobs:
           git add llama.cpp
           git commit -m "chore: bump llama.cpp to ${{ steps.check.outputs.new_tag }}"
           git tag -a "v${{ steps.version.outputs.version }}" -m "llama.cpp ${{ steps.check.outputs.new_tag }}"
-          git push origin main "v${{ steps.version.outputs.version }}"
+          git push origin HEAD:main --follow-tags
