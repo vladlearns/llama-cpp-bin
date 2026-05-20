@@ -109,6 +109,12 @@ jobs:
           Add-Content $env:GITHUB_ENV "VULKAN_SDK=C:\VulkanSDK\${env:VULKAN_VERSION}"
           Add-Content $env:GITHUB_PATH "C:\VulkanSDK\${env:VULKAN_VERSION}\bin"
 
+      - name: Install SPIRV-Headers (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          vcpkg install spirv-headers:x64-windows
+          Add-Content $env:GITHUB_ENV "CMAKE_PREFIX_PATH=$env:VULKAN_SDK;C:\vcpkg\installed\x64-windows"
+
       - name: Install Vulkan SDK (Linux)
         if: runner.os == 'Linux'
         shell: bash
@@ -129,7 +135,7 @@ jobs:
           $env:CMAKE_ARGS = "-DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=off -DGGML_BACKEND_DL=on -DGGML_CPU_ALL_VARIANTS=on -DGGML_RPC=on -DLLAMA_BUILD_TESTS=off -DLLAMA_BUILD_EXAMPLES=off $env:CMAKE_ARGS"
 
           if ($IsWindows) {
-            $env:CMAKE_ARGS = "-G 'Ninja' -DCMAKE_PREFIX_PATH=$env:VULKAN_SDK -DLLAMA_BUILD_BORINGSSL=ON $env:CMAKE_ARGS"
+            $env:CMAKE_ARGS = "-G 'Ninja' -DCMAKE_PREFIX_PATH=$env:CMAKE_PREFIX_PATH -DLLAMA_BUILD_BORINGSSL=ON $env:CMAKE_ARGS"
           }
 
           $env:LLAMA_CPP_BUILD_JOBS = "2"
