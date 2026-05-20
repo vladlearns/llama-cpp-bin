@@ -20,12 +20,21 @@ jobs:
       - name: Check for updates
         id: check
         run: |
-          git submodule update --remote llama.cpp
-          cd llama.cpp
-          NEW_TAG=$(git describe --tags --match "b*" --abbrev=0)
+          LATEST=$(git ls-remote --tags --sort=-v:refname https://github.com/ggml-org/llama.cpp.git 'refs/tags/b*' | head -1)
+          NEW_TAG=$(echo "$LATEST" | sed 's|.*/||')
+          NEW_SHA=$(echo "$LATEST" | awk '{print $1}')
           echo "new_tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
-          cd ..
-          git diff --quiet llama.cpp && echo "changed=false" >> "$GITHUB_OUTPUT" || echo "changed=true" >> "$GITHUB_OUTPUT"
+          CURRENT_SHA=$(git ls-tree HEAD llama.cpp | awk '{print $3}')
+          if [ "$NEW_SHA" = "$CURRENT_SHA" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            # Update submodule to the tagged commit
+            cd llama.cpp
+            git fetch origin "$NEW_SHA" --depth=1
+            git checkout "$NEW_SHA"
+            cd ..
+          fi
 
       - name: Skip if no changes
         if: steps.check.outputs.changed == 'false'
@@ -54,3 +63,10 @@ jobs:
           git tag -a "v${{ steps.version.outputs.version }}" -m "llama.cpp ${{ steps.check.outputs.new_tag }}"
           git push origin HEAD:main
           git push origin "refs/tags/v${{ steps.version.outputs.version }}"
+
+      - name: Trigger build
+        if: steps.check.outputs.changed == 'true' && steps.version.outputs.version != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: gh workflow run build-everything.yml --ref main -f version="v$VERSION"
